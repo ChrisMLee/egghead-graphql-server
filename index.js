@@ -191,32 +191,32 @@ const videoMutation = mutationWithClientMutationId({
 */
 
 /* Relay compliant */
-// const mutationType = new GraphQLObjectType({
-//   name: "Mutation",
-//   description: "the root mutation type",
-//   fields: {
-//     createVideo: videoMutation
-//   }
-// });
-
-// type on field is what you can query on after you run the mutation
 const mutationType = new GraphQLObjectType({
   name: "Mutation",
-  description: "The root Mutation type.",
+  description: "the root mutation type",
   fields: {
-    createVideo: {
-      type: videoType,
-      args: {
-        video: {
-          type: new GraphQLNonNull(videoInputType)
-        }
-      },
-      resolve: (_, args) => {
-        return createVideo(args.video);
-      }
-    }
+    createVideo: videoMutation
   }
 });
+
+// type on field is what you can query on after you run the mutation
+// const mutationType = new GraphQLObjectType({
+//   name: "Mutation",
+//   description: "The root Mutation type.",
+//   fields: {
+//     createVideo: {
+//       type: videoType,
+//       args: {
+//         video: {
+//           type: new GraphQLNonNull(videoInputType)
+//         }
+//       },
+//       resolve: (_, args) => {
+//         return createVideo(args.video);
+//       }
+//     }
+//   }
+// });
 
 /* Can also include:
    mutation,
