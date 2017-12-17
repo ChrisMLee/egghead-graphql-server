@@ -22,7 +22,8 @@ const {
   connectionDefinitions,
   connectionFromPromisedArray,
   connectionArgs,
-  mutationWithClientMutationId
+  mutationWithClientMutationId,
+  cursorForObjectInConnection
 } = require("graphql-relay");
 
 const PORT = process.env.port || 3001;
@@ -73,7 +74,11 @@ const videoType = new GraphQLObjectType({
 
 exports.videoType = videoType;
 
-const { connectionType: VideoConnection } = connectionDefinitions({
+// connectionDefinitions returns a connectionType and its associated edgeType, given a node type.
+const {
+  connectionType: VideoConnection,
+  edgeType: VideoEdge
+} = connectionDefinitions({
   nodeType: videoType,
   connectionFields: () => ({
     totalCount: {
@@ -85,6 +90,14 @@ const { connectionType: VideoConnection } = connectionDefinitions({
     }
   })
 });
+
+/* via https://github.com/almope1516daw2/rework/blob/418586e7f8946925e8ea42a37528721a3228be88/graphql/type/PostConnection.js
+
+export default connectionDefinitions({
+  name: 'Post',
+  nodeType: PostType
+});
+*/
 
 /* non-connection syntax
 
@@ -163,18 +176,44 @@ const videoMutation = mutationWithClientMutationId({
     }
   },
   outputFields: {
-    video: {
-      type: videoType
+    videoEdge: {
+      type: VideoEdge,
+      resolve: ({ video }, args) => {
+        return getVideos()
+          .then(existingVideos => {
+            return {
+              cursor: cursorForObjectInConnection(existingVideos, video),
+              node: video
+            };
+          })
+          .catch(error => error);
+      }
     }
   },
   mutateAndGetPayload: args =>
     new Promise((resolve, reject) => {
-      // video arg comes from the outputFields
+      // this is will be fed in to the resolve function in outputFields
       Promise.resolve(createVideo(args))
-        .then(video => resolve({ video }))
+        .then(video => {
+          resolve({ video });
+        })
         .catch(reject);
     })
 });
+
+/* via https://github.com/almope1516daw2/rework/blob/418586e7f8946925e8ea42a37528721a3228be88/graphql/mutation/PostMutation.js
+
+outputFields: {
+  postEdge: {
+    type: PostConnection.edgeType,
+    resolve: (newPost, args, { db }) => {
+      return {
+        cursor: cursorForObjectInConnection(db.getPosts(), newPost),
+        node: newPost,
+      };
+    },
+  },
+*/
 
 /*
   {
