@@ -193,11 +193,16 @@ const videoMutation = mutationWithClientMutationId({
   mutateAndGetPayload: args =>
     new Promise((resolve, reject) => {
       // this is will be fed in to the resolve function in outputFields
-      Promise.resolve(createVideo(args))
-        .then(video => {
-          resolve({ video });
-        })
-        .catch(reject);
+      // mock async using setTimeout
+      setTimeout(
+        () =>
+          Promise.resolve(createVideo(args))
+            .then(video => {
+              resolve({ video });
+            })
+            .catch(reject),
+        500
+      );
     })
 });
 
